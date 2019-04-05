@@ -2,14 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const int N = 10;                       /* Square matrix size */
+const int N = 1000;                     /* Square matrix size */
 double *a, *b, *c;                      /* Data blocks init in root */
 double *a_block, *b_block, *c_block;    /* Blocks to calculate on each process */
 
 double* alloc_matrix(int size) {
     return (double*) malloc(size * size * sizeof(double));
 }
-
 
 void init_matrix(double* matrix, int size) {
     int i, j;
@@ -73,6 +72,7 @@ int main() {
         exit(1);
     }
 
+
     if (world_rank == 0) {
         a = alloc_matrix(N);
         b = alloc_matrix(N);
@@ -80,9 +80,16 @@ int main() {
         init_matrix(b, N);
     }
 
+    /* Start of parallel section */
+    MPI_Barrier(MPI_COMM_WORLD);
+    double time = - MPI_Wtime();
+
     a_block = alloc_matrix(N / 2);
     b_block = alloc_matrix(N / 2);
     c_block = alloc_matrix(N / 2);
+    fill_matrix(a_block, N/2, 0);
+    fill_matrix(b_block, N/2, 0);
+    fill_matrix(c_block, N/2, 0);
 
     MPI_Datatype array_block;
     if (world_rank == 0) {
@@ -99,7 +106,6 @@ int main() {
 
         c = alloc_matrix(N);
         fill_matrix(c, N, 0);
-
     }
     
     /********************************************************/
@@ -148,7 +154,6 @@ int main() {
         Proc 2: a3 * b2
         Proc 3: a3 * b3
     */
-    /* Send remaining block of a */
     {
         int a_blocks_indices[4] = {blocks[1], blocks[1], blocks[3], blocks[3]};
         MPI_Scatterv(a, send_counts, a_blocks_indices, array_block,
@@ -169,10 +174,29 @@ int main() {
     MPI_Gatherv(c_block, (N/2)*(N/2), MPI_DOUBLE, 
         c, recv_counts, blocks, array_block, 0, MPI_COMM_WORLD);
 
+    free(a_block);
+    free(b_block);
+    free(c_block);
+
+    /* End of paralle section */
+    MPI_Barrier(MPI_COMM_WORLD);
+    time += MPI_Wtime();
+
     if (world_rank == 0) {
-        print_matrix(a, N);
-        print_matrix(c, N);
+        if (N <= 10) {
+            print_matrix(a, N);
+            print_matrix(c, N);
+        }
+        printf("Elapsed time: %.2lf seconds\n", time);
+    }
+
+    if (world_rank == 0) {
+        free(a);
+        free(b);
+        free(c);
+        MPI_Type_free(&array_block);
     }
 
     MPI_Finalize();
+    return 0;
 }

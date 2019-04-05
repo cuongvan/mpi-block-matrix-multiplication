@@ -1,4 +1,4 @@
-mpicc test_send_submatrix.c 
+mpicc collective.c 
 mpirun -hostfile hostfile -np 4 ./a.out
 
     if (world_rank == 0) {

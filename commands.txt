@@ -1,0 +1,36 @@
+mpicc test_send_submatrix.c 
+mpirun -hostfile hostfile -np 4 ./a.out
+
+    if (world_rank == 0) {
+        print_matrix(a, N);
+        printf("\n\nProcess 0\n");
+        print_matrix(a_block, N/2);
+        print_matrix(b_block, N/2);
+    }
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (world_rank == 1) {
+        printf("\n\nProcess 1\n");
+        print_matrix(a_block, N/2);
+        print_matrix(b_block, N/2);
+    }
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if (world_rank == 2) {
+        printf("\n\nProcess 2\n");
+        print_matrix(a_block, N/2);
+        print_matrix(b_block, N/2);
+    }
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+
+    if (world_rank == 3) {
+        printf("\n\nProcess 3\n");
+        print_matrix(a_block, N/2);
+        print_matrix(b_block, N/2);
+    }
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    

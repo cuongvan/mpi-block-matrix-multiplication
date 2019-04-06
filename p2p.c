@@ -25,7 +25,6 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-
     if (world_rank == 0) {
         a = alloc_matrix(N);
         b = alloc_matrix(N);

@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -6,62 +7,12 @@ const int N = 10;                     /* Square matrix size */
 double *a, *b, *c;                      /* Data blocks init in root */
 double *a_block, *b_block, *c_block;    /* Blocks to calculate on each process */
 
-double* alloc_matrix(int size) {
-    return (double*) malloc(size * size * sizeof(double));
-}
-
-void init_matrix(double* matrix, int size) {
-    int i, j;
-    for (i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            matrix[i*size + j] = 2*(i/(size/2)) + j/(size/2);
-        }
-    }
-}
-
-void fill_matrix(double* matrix, int size, int fill_value) {
-    int i, j;
-    for (i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            matrix[i*size + j] = fill_value;
-        }
-    }
-}
-
-
-void print_matrix(double* matrix, int size) {
-    int i, j;
-    for (i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++)
-            printf("% 6.0lf ", matrix[i*size + j]);
-        printf("\n");
-    }
-    printf("-------------------------------------------------------------------------\n");
-}
-
-
-void block_multiply(int block_size) {
-    int i, j, k;
-    double *aptr, *bptr, *cptr;
-
-    for (i = 0; i < block_size; i++)
-        for (j = 0; j < block_size; j++) {
-            cptr = c_block + i*block_size + j;
-            aptr = a_block + i*block_size;
-            bptr = b_block + j;
-            for (k = 0; k < block_size; k++) {
-                *cptr += *(aptr++) * *bptr;
-                bptr += block_size;
-            }
-        }
-}
-
-int main() {
+int main(int argc, char** argv) {
     int world_size, world_rank;
-    const int block_size = N / 2;
+    const int block_size = N/2;
+    const int num_block_elements = block_size * block_size;
 
-
-    MPI_Init(NULL, NULL);
+    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
@@ -119,8 +70,8 @@ int main() {
 
     */
     const int blocks[4] = {         /* Memory address of top-left corners */
-        0, N/2,                     /*   of blocks 0, 1, 2, 3 */
-        N*(N/2), N*(N/2) + N/2
+        0, block_size,              /*     of blocks 0, 1, 2, 3 */
+        N*block_size, N*block_size + block_size
     };
 
     /* First pass:
@@ -155,14 +106,14 @@ int main() {
         }
         else {
             MPI_Request requests[2];
-            MPI_Irecv(a_block, block_size * block_size, MPI_DOUBLE, 0, a_tag, MPI_COMM_WORLD, &requests[0]);
-            MPI_Irecv(b_block, block_size * block_size, MPI_DOUBLE, 0, b_tag, MPI_COMM_WORLD, &requests[1]);
+            MPI_Irecv(a_block, num_block_elements, MPI_DOUBLE, 0, a_tag, MPI_COMM_WORLD, &requests[0]);
+            MPI_Irecv(b_block, num_block_elements, MPI_DOUBLE, 0, b_tag, MPI_COMM_WORLD, &requests[1]);
 
             MPI_Waitall(2, requests, MPI_STATUSES_IGNORE);
         }
     }
 
-    block_multiply(block_size);
+    block_multiply(a_block, b_block, c_block, block_size);
     MPI_Barrier(MPI_COMM_WORLD);    // Every slave procs have to be done before `a_block` can be reused
 
     /*  Second pass:
@@ -197,14 +148,14 @@ int main() {
         }
         else {
             MPI_Request requests[2];
-            MPI_Irecv(a_block, block_size * block_size, MPI_DOUBLE, 0, a_tag, MPI_COMM_WORLD, &requests[0]);
-            MPI_Irecv(b_block, block_size * block_size, MPI_DOUBLE, 0, b_tag, MPI_COMM_WORLD, &requests[1]);
+            MPI_Irecv(a_block, num_block_elements, MPI_DOUBLE, 0, a_tag, MPI_COMM_WORLD, &requests[0]);
+            MPI_Irecv(b_block, num_block_elements, MPI_DOUBLE, 0, b_tag, MPI_COMM_WORLD, &requests[1]);
 
             MPI_Waitall(2, requests, MPI_STATUSES_IGNORE);
         }
     }
 
-    block_multiply(block_size);
+    block_multiply(a_block, b_block, c_block, block_size);
 
     /* Send all result to proc 0 */
     {
@@ -224,10 +175,9 @@ int main() {
             MPI_Waitall(3, requests, MPI_STATUSES_IGNORE);
         }
         else {
-            MPI_Send(c_block, block_size * block_size, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
+            MPI_Send(c_block, num_block_elements, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);
         }
     }
-
 
     free(a_block);
     free(b_block);
@@ -239,7 +189,9 @@ int main() {
 
     if (world_rank == 0) {
         if (N <= 10) {
+            printf("Input matrices:\n");
             print_matrix(a, N);
+            printf("Output matrix:\n");
             print_matrix(c, N);
         }
         printf("Elapsed time: %.2lf seconds\n", time);

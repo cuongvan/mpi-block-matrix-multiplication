@@ -1,39 +1,5 @@
-mpicc collective.c -o collective
+mpicc -o collective -Wall collective.c common.c
 mpirun -hostfile hostfile -np 4 ./collective
 
-mpicc p2p.c -o p2p
+mpicc -o p2p -Wall p2p.c common.c
 mpirun -hostfile hostfile -np 4 ./p2p
-
-    if (world_rank == 0) {
-        print_matrix(a, N);
-        printf("\n\nProcess 0\n");
-        print_matrix(a_block, N/2);
-        print_matrix(b_block, N/2);
-    }
-    
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (world_rank == 1) {
-        printf("\n\nProcess 1\n");
-        print_matrix(a_block, N/2);
-        print_matrix(b_block, N/2);
-    }
-    
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    if (world_rank == 2) {
-        printf("\n\nProcess 2\n");
-        print_matrix(a_block, N/2);
-        print_matrix(b_block, N/2);
-    }
-    
-    MPI_Barrier(MPI_COMM_WORLD);
-    
-
-    if (world_rank == 3) {
-        printf("\n\nProcess 3\n");
-        print_matrix(a_block, N/2);
-        print_matrix(b_block, N/2);
-    }
-    
-    MPI_Barrier(MPI_COMM_WORLD);
-    

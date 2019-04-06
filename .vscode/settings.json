@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "mpi.h": "c"
+        "mpi.h": "c",
+        "stdio.h": "c"
     }
 }

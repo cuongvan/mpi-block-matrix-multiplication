@@ -1,8 +1,8 @@
 # Block matrix multiplication using MPI
 
 ## Two approaches are used
-- Point-to-point communications (`scatter` and `gather`)
-- Collective communications
+- Point-to-point communication
+- Collective communication (using `MPI_Scatter()` and `MPI_Gather()`)
 
 ## Build
 ```
@@ -12,8 +12,8 @@ mpicc -o p2p -Wall p2p.c common.c
 
 ## Run
 ```
-mpirun -hostfile hostfile -np 4 ./collective
-mpirun -hostfile hostfile -np 4 ./p2p
+mpirun -hostfile hostfile -np 4 ./collective <matrix_size> || mpirun -np 4 ./collective <matrix_size>
+mpirun -hostfile hostfile -np 4 ./p2p <matrix_size> || mpirun -np 4 ./p2p <matrix_size>
 ```
 
 ## Note
@@ -29,7 +29,7 @@ The two programs can only run with  4 processes, no more, no less.
 |          800 | 1.838 |      2.204 |
 |         1000 | 5.856 |      5.692 |
 
-### On Intel(R) Xeon(R) CPU E5-2680 v3 @ 2.50GHz
+### On Intel(R) Xeon(R) CPU E5-2680 v3 @ 2.50GHz, 48 cores
 | Matrix size  | P2P   | Collective |
 |-------------:|------:|-----------:|
 |          100 |  0.00 |       0.00 |

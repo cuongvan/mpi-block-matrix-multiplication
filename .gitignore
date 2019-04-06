@@ -1,5 +1,3 @@
-*
-!test_send_submatrix.c
-!.gitignore
-!commands.txt
-!hostfile
+.vscode/ipch
+p2p
+collective

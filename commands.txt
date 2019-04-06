@@ -5,6 +5,7 @@ mpirun -hostfile hostfile -np 4 ./collective 500
 mpirun -hostfile hostfile -np 4 ./p2p 500
 
 
-for i in {1..5}; do
-    mpirun -hostfile hostfile -np 4 ./p2p 100
-done;
+for i in {1..5}; do  mpirun -np 4 ./p2p 1000; done;
+
+for i in {1..5}; do mpirun -np 4 ./collective 400; done;
+

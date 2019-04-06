@@ -3,15 +3,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const int N = 10;                     /* Square matrix size */
 double *a, *b, *c;                      /* Data blocks init in root */
 double *a_block, *b_block, *c_block;    /* Blocks to calculate on each process */
 
 int main(int argc, char** argv) {
-    int world_size, world_rank;
+    int N;                              /* Square matrix size */
+    if (argc < 2) {
+        printf("Usage: p2p <matrix_size>");
+    }
+    else {
+        N = atoi(argv[1]);
+        if (N % 2 == 1) {
+            printf("matrix_size should by divisible by 2");
+            exit(1);
+        }
+    }
+    
     const int block_size = N/2;
     const int num_block_elements = block_size * block_size;
 
+    int world_size, world_rank;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);

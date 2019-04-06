@@ -36,7 +36,7 @@ void print_matrix(double* matrix, int size) {
             printf("% 6.0lf ", matrix[i*size + j]);
         printf("\n");
     }
-    printf("-------------------------------------------------\n");
+    printf("-------------------------------------------------------------------------\n");
 }
 
 
@@ -82,7 +82,6 @@ int main() {
         init_matrix(a, N);
         init_matrix(b, N);
         fill_matrix(c, N, 0);
-        print_matrix(a, N);
     }
 
     /* Start of parallel section */
@@ -229,65 +228,29 @@ int main() {
         }
     }
 
+
+    free(a_block);
+    free(b_block);
+    free(c_block);
+
+    /* End of paralle section */
+    MPI_Barrier(MPI_COMM_WORLD);
+    time += MPI_Wtime();
+
     if (world_rank == 0) {
-        printf("Done!\n");
-        if (N <= 10)
+        if (N <= 10) {
+            print_matrix(a, N);
             print_matrix(c, N);
+        }
+        printf("Elapsed time: %.2lf seconds\n", time);
     }
-    
 
-    // /* Multiply the first pair of blocks */
-    // block_multiply(N / 2);
-
-    // /*
-    //     Second pass:
-    //     Proc 0: a1 * b2
-    //     Proc 1: a1 * b3
-    //     Proc 2: a3 * b2
-    //     Proc 3: a3 * b3
-    // */
-    // {
-    //     int a_blocks_indices[4] = {blocks[1], blocks[1], blocks[3], blocks[3]};
-    //     MPI_Scatterv(a, send_counts, a_blocks_indices, array_block,
-    //         a_block, (N/2)*(N/2), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    //     int b_block_indices[4] = {blocks[2], blocks[3], blocks[2], blocks[3]};
-    //     MPI_Scatterv(b, send_counts, b_block_indices, array_block,
-    //         b_block, (N/2)*(N/2), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    // }
-    
-    // /* Multiply the remaining pair of blocks */
-    // block_multiply(N / 2);
-
-
-    // /********************************************************/
-    // /* Send the results back to process 0 */
-    // int recv_counts[4] = {1, 1, 1, 1};
-    // MPI_Gatherv(c_block, (N/2)*(N/2), MPI_DOUBLE, 
-    //     c, recv_counts, blocks, array_block, 0, MPI_COMM_WORLD);
-
-    // free(a_block);
-    // free(b_block);
-    // free(c_block);
-
-    // /* End of paralle section */
-    // MPI_Barrier(MPI_COMM_WORLD);
-    // time += MPI_Wtime();
-
-    // if (world_rank == 0) {
-    //     if (N <= 10) {
-    //         print_matrix(a, N);
-    //         print_matrix(c, N);
-    //     }
-    //     printf("Elapsed time: %.2lf seconds\n", time);
-    // }
-
-    // if (world_rank == 0) {
-    //     free(a);
-    //     free(b);
-    //     free(c);
-    //     MPI_Type_free(&array_block);
-    // }
+    if (world_rank == 0) {
+        free(a);
+        free(b);
+        free(c);
+        MPI_Type_free(&array_block);
+    }
 
     MPI_Finalize();
     return 0;

@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
             MPI_Request requests[3];
             MPI_Irecv(&c[blocks[1]], 1, array_block, 1, tag, MPI_COMM_WORLD, &requests[0]);
             MPI_Irecv(&c[blocks[2]], 1, array_block, 2, tag, MPI_COMM_WORLD, &requests[1]);
-            MPI_Irecv(&c[blocks[3]], 1, array_block, 3, tag, MPI_COMM_WORLD, &requests[3]);
+            MPI_Irecv(&c[blocks[3]], 1, array_block, 3, tag, MPI_COMM_WORLD, &requests[2]);
 
             /* proc 0: copy c_block --> c0 */
             int i, j;

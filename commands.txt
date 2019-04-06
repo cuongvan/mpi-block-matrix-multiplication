@@ -1,5 +1,8 @@
-mpicc collective.c 
-mpirun -hostfile hostfile -np 4 ./a.out
+mpicc collective.c -o collective
+mpirun -hostfile hostfile -np 4 ./collective
+
+mpicc p2p.c -o p2p
+mpirun -hostfile hostfile -np 4 ./p2p
 
     if (world_rank == 0) {
         print_matrix(a, N);
